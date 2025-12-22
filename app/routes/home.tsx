@@ -37,7 +37,9 @@ export default function Home() {
 
   /**
    * Fetches characters from the API for the current page
-   * The API always returns 20 items per page, so we calculate which API page to fetch
+   * The API always returns 20 items per page (https://rickandmortyapi.com/documentation/#api),
+   * WE CANNOT CHANGE THIS
+   * so we calculate which API page to fetch
    * and slice the appropriate items based on itemsPerPage setting
    */
   const loadData = useCallback(async (page: number) => {
