@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { Route } from "./+types/settings";
 import { useApp } from "../context/AppContext";
 import type { UserProfile } from "../context/AppContext";
+import { useToast } from "../context/ToastContext";
 import { Header } from "../components/Header";
 
 export function meta({}: Route.MetaArgs) {
@@ -14,8 +15,8 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Settings() {
   const { profile, updateProfile, resetProfile } = useApp();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState<UserProfile>(profile);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setFormData(profile);
@@ -53,8 +54,7 @@ export default function Settings() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile(formData);
-    setSaveMessage("Settings saved successfully!");
-    setTimeout(() => setSaveMessage(null), 3000);
+    showToast("Settings saved successfully!", "success");
   };
 
   /**
@@ -62,8 +62,7 @@ export default function Settings() {
    */
   const handleReset = () => {
     resetProfile();
-    setSaveMessage("Settings reset to defaults!");
-    setTimeout(() => setSaveMessage(null), 3000);
+    showToast("Settings reset to defaults!", "info");
   };
 
   return (
@@ -80,15 +79,6 @@ export default function Settings() {
               Customize your interdimensional exploration experience
             </p>
           </div>
-
-          {saveMessage && (
-            <div className="mb-6 p-4 bg-[var(--color-success)]/20 border border-[var(--color-success)]/30 rounded-xl text-[var(--color-success)] flex items-center gap-3 animate-slide-up">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              {saveMessage}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Profile Section */}

@@ -9,6 +9,8 @@ import {
 
 import type { Route } from "./+types/root";
 import { AppProvider } from "./context/AppContext";
+import { ToastProvider } from "./context/ToastContext";
+import { ToastContainer } from "./components/Toast";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -34,9 +36,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <AppProvider>
-          {children}
-        </AppProvider>
+        <ToastProvider>
+          <AppProvider>
+            {children}
+          </AppProvider>
+          <ToastContainer />
+        </ToastProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

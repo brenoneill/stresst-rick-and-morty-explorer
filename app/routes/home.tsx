@@ -3,6 +3,7 @@ import type { Route } from "./+types/home";
 import type { Character } from "../types/api";
 import { fetchCharacters } from "../utils/api";
 import { useApp } from "../context/AppContext";
+import { useToast } from "../context/ToastContext";
 import { Header } from "../components/Header";
 import { CharacterCard } from "../components/CharacterCard";
 import { FilterBar } from "../components/FilterBar";
@@ -20,6 +21,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const { profile, updateProfile } = useApp();
+  const { showToast } = useToast();
   
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,9 +168,15 @@ export default function Home() {
               filteredCount={filteredCharacters.length}
               showDeadCharacters={profile.showDeadCharacters}
               itemsPerPage={profile.itemsPerPage}
-              onItemsPerPageChange={(count) => updateProfile({ itemsPerPage: count })}
+              onItemsPerPageChange={(count) => {
+                updateProfile({ itemsPerPage: count });
+                showToast(`Showing ${count} items per page`, "info");
+              }}
               itemsPerRow={profile.itemsPerRow}
-              onItemsPerRowChange={(count) => updateProfile({ itemsPerRow: count })}
+              onItemsPerRowChange={(count) => {
+                updateProfile({ itemsPerRow: count });
+                showToast(`Layout changed to ${count} column${count > 1 ? "s" : ""}`, "info");
+              }}
             />
 
             {filteredCharacters.length === 0 ? (
