@@ -22,6 +22,11 @@ export default function Settings() {
   }, [profile]);
 
   /**
+   * Check if form data differs from saved profile
+   */
+  const hasChanges = JSON.stringify(formData) !== JSON.stringify(profile);
+
+  /**
    * Handles input field changes
    */
   const handleChange = (
@@ -285,7 +290,12 @@ export default function Settings() {
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 type="submit"
-                className="btn-glow flex-1 px-6 py-3 bg-[var(--color-portal)] hover:bg-[var(--color-portal)]/80 text-[var(--color-midnight)] font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                disabled={!hasChanges}
+                className={`flex-1 px-6 py-3 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  hasChanges
+                    ? "btn-glow bg-[var(--color-portal)] hover:bg-[var(--color-portal)]/80 text-[var(--color-midnight)]"
+                    : "bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] cursor-not-allowed"
+                }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
