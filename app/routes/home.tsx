@@ -19,7 +19,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const { profile } = useApp();
+  const { profile, updateProfile } = useApp();
   
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -165,6 +165,8 @@ export default function Home() {
               totalCharacters={totalCharacters}
               filteredCount={filteredCharacters.length}
               showDeadCharacters={profile.showDeadCharacters}
+              itemsPerPage={profile.itemsPerPage}
+              onItemsPerPageChange={(count) => updateProfile({ itemsPerPage: count })}
             />
 
             {filteredCharacters.length === 0 ? (

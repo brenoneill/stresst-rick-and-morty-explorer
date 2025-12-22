@@ -8,10 +8,13 @@ interface FilterBarProps {
   totalCharacters: number;
   filteredCount: number;
   showDeadCharacters: boolean;
+  itemsPerPage: number;
+  onItemsPerPageChange: (count: number) => void;
 }
 
 const STATUS_OPTIONS = ["All", "Alive", "Dead", "unknown"];
 const SPECIES_OPTIONS = ["All", "Human", "Alien", "Humanoid", "Robot", "Animal", "Mythological Creature"];
+const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20];
 
 /**
  * Filter bar component for filtering and searching characters
@@ -24,6 +27,8 @@ const SPECIES_OPTIONS = ["All", "Human", "Alien", "Humanoid", "Robot", "Animal",
  * @param totalCharacters - Total number of characters
  * @param filteredCount - Number of characters after filtering
  * @param showDeadCharacters - Whether dead characters are shown (from settings)
+ * @param itemsPerPage - Number of items displayed per page
+ * @param onItemsPerPageChange - Callback when items per page changes
  */
 export function FilterBar({
   selectedStatus,
@@ -35,6 +40,8 @@ export function FilterBar({
   totalCharacters,
   filteredCount,
   showDeadCharacters,
+  itemsPerPage,
+  onItemsPerPageChange,
 }: FilterBarProps) {
   const hasFilters = selectedStatus !== "All" || selectedSpecies !== "All" || searchQuery !== "";
 
@@ -109,7 +116,7 @@ export function FilterBar({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-sm">
+      <div className="mt-3 flex items-center text-sm">
         <span className="text-[var(--color-text-secondary)]">
           Showing{" "}
           <span className="font-semibold text-[var(--color-accent-light)]">
@@ -128,11 +135,26 @@ export function FilterBar({
               onSpeciesChange("All");
               onSearchChange("");
             }}
-            className="text-[var(--color-accent)] hover:text-[var(--color-accent-light)] transition-colors"
+            className="ml-4 text-[var(--color-accent)] hover:text-[var(--color-accent-light)] transition-colors"
           >
             Clear filters
           </button>
         )}
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[var(--color-text-secondary)]">Show</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="px-2 py-1 bg-[var(--color-surface-light)] border border-[var(--color-surface-light)] rounded-md text-[var(--color-text-primary)] focus:border-[var(--color-accent)] cursor-pointer"
+          >
+            {ITEMS_PER_PAGE_OPTIONS.map((count) => (
+              <option key={count} value={count}>
+                {count}
+              </option>
+            ))}
+          </select>
+          <span className="text-[var(--color-text-secondary)]">per page</span>
+        </div>
       </div>
     </div>
   );
