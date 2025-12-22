@@ -10,11 +10,14 @@ interface FilterBarProps {
   showDeadCharacters: boolean;
   itemsPerPage: number;
   onItemsPerPageChange: (count: number) => void;
+  itemsPerRow: 1 | 2 | 3;
+  onItemsPerRowChange: (count: 1 | 2 | 3) => void;
 }
 
 const STATUS_OPTIONS = ["All", "Alive", "Dead", "unknown"];
 const SPECIES_OPTIONS = ["All", "Human", "Alien", "Humanoid", "Robot", "Animal", "Mythological Creature"];
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20];
+const ITEMS_PER_ROW_OPTIONS: (1 | 2 | 3)[] = [1, 2, 3];
 
 /**
  * Filter bar component for filtering and searching characters
@@ -29,6 +32,8 @@ const ITEMS_PER_PAGE_OPTIONS = [5, 10, 15, 20];
  * @param showDeadCharacters - Whether dead characters are shown (from settings)
  * @param itemsPerPage - Number of items displayed per page
  * @param onItemsPerPageChange - Callback when items per page changes
+ * @param itemsPerRow - Number of items displayed per row (1, 2, or 3)
+ * @param onItemsPerRowChange - Callback when items per row changes
  */
 export function FilterBar({
   selectedStatus,
@@ -42,6 +47,8 @@ export function FilterBar({
   showDeadCharacters,
   itemsPerPage,
   onItemsPerPageChange,
+  itemsPerRow,
+  onItemsPerRowChange,
 }: FilterBarProps) {
   const hasFilters = selectedStatus !== "All" || selectedSpecies !== "All" || searchQuery !== "";
 
@@ -140,20 +147,55 @@ export function FilterBar({
             Clear filters
           </button>
         )}
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-[var(--color-text-secondary)]">Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-            className="px-2 py-1 bg-[var(--color-surface-light)] border border-[var(--color-surface-light)] rounded-md text-[var(--color-text-primary)] focus:border-[var(--color-accent)] cursor-pointer"
-          >
-            {ITEMS_PER_PAGE_OPTIONS.map((count) => (
-              <option key={count} value={count}>
-                {count}
-              </option>
+        <div className="ml-auto flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--color-text-secondary)]">Show</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+              className="px-2 py-1 bg-[var(--color-surface-light)] border border-[var(--color-surface-light)] rounded-md text-[var(--color-text-primary)] focus:border-[var(--color-accent)] cursor-pointer"
+            >
+              {ITEMS_PER_PAGE_OPTIONS.map((count) => (
+                <option key={count} value={count}>
+                  {count}
+                </option>
+              ))}
+            </select>
+            <span className="text-[var(--color-text-secondary)]">per page</span>
+          </div>
+          <div className="flex items-center gap-1.5 border-l border-[var(--color-surface-light)] pl-4">
+            {ITEMS_PER_ROW_OPTIONS.map((count) => (
+              <button
+                key={count}
+                onClick={() => onItemsPerRowChange(count)}
+                className={`p-1.5 rounded-md transition-colors ${
+                  itemsPerRow === count
+                    ? "bg-[var(--color-accent)] text-[var(--color-midnight)]"
+                    : "bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                }`}
+                title={`${count} per row`}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                  {count === 1 && (
+                    <rect x="2" y="4" width="12" height="8" rx="1" />
+                  )}
+                  {count === 2 && (
+                    <>
+                      <rect x="1" y="4" width="6" height="8" rx="1" />
+                      <rect x="9" y="4" width="6" height="8" rx="1" />
+                    </>
+                  )}
+                  {count === 3 && (
+                    <>
+                      <rect x="1" y="4" width="4" height="8" rx="1" />
+                      <rect x="6" y="4" width="4" height="8" rx="1" />
+                      <rect x="11" y="4" width="4" height="8" rx="1" />
+                    </>
+                  )}
+                </svg>
+              </button>
             ))}
-          </select>
-          <span className="text-[var(--color-text-secondary)]">per page</span>
+          </div>
         </div>
       </div>
     </div>

@@ -167,6 +167,8 @@ export default function Home() {
               showDeadCharacters={profile.showDeadCharacters}
               itemsPerPage={profile.itemsPerPage}
               onItemsPerPageChange={(count) => updateProfile({ itemsPerPage: count })}
+              itemsPerRow={profile.itemsPerRow}
+              onItemsPerRowChange={(count) => updateProfile({ itemsPerRow: count })}
             />
 
             {filteredCharacters.length === 0 ? (
@@ -183,7 +185,13 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className={`grid gap-4 ${
+                  profile.itemsPerRow === 1 
+                    ? "grid-cols-1" 
+                    : profile.itemsPerRow === 2 
+                      ? "grid-cols-1 md:grid-cols-2" 
+                      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                }`}>
                   {filteredCharacters.map((character, index) => (
                     <CharacterCard
                       key={character.id}

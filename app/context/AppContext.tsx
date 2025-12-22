@@ -10,6 +10,7 @@ export interface UserProfile {
   favoriteCharacter: string;
   theme: "dark" | "light" | "portal";
   itemsPerPage: number;
+  itemsPerRow: 1 | 2 | 3;
   showDeadCharacters: boolean;
   notifications: boolean;
 }
@@ -29,6 +30,7 @@ const DEFAULT_PROFILE: UserProfile = {
   favoriteCharacter: "Rick Sanchez",
   theme: "dark",
   itemsPerPage: 20,
+  itemsPerRow: 2,
   showDeadCharacters: true,
   notifications: true,
 };

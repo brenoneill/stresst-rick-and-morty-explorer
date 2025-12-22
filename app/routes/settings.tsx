@@ -29,10 +29,13 @@ export default function Settings() {
   ) => {
     const { name, value, type } = e.target;
     
+    // Fields that should be stored as numbers
+    const numericFields = ["itemsPerPage", "itemsPerRow"];
+    
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (type === "number") {
+    } else if (type === "number" || numericFields.includes(name)) {
       setFormData((prev) => ({ ...prev, [name]: parseInt(value, 10) }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -191,10 +194,34 @@ export default function Settings() {
                   >
                     <option value={5}>5</option>
                     <option value={10}>10</option>
+                    <option value={15}>15</option>
                     <option value={20}>20</option>
                   </select>
                   <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
                     Controls how many characters are displayed on the Explore page
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="itemsPerRow"
+                    className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2"
+                  >
+                    Items Per Row
+                  </label>
+                  <select
+                    id="itemsPerRow"
+                    name="itemsPerRow"
+                    value={formData.itemsPerRow}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-[var(--color-surface-light)] border border-[var(--color-surface-light)] rounded-lg text-[var(--color-text-primary)] focus:border-[var(--color-portal)] cursor-pointer"
+                  >
+                    <option value={1}>1 column</option>
+                    <option value={2}>2 columns</option>
+                    <option value={3}>3 columns</option>
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    Controls the grid layout on the Explore page
                   </p>
                 </div>
               </div>
@@ -304,6 +331,9 @@ export default function Settings() {
                   </span>
                   <span className="px-2 py-1 bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] text-xs rounded-full">
                     📄 {profile.itemsPerPage} per page
+                  </span>
+                  <span className="px-2 py-1 bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] text-xs rounded-full">
+                    📊 {profile.itemsPerRow} per row
                   </span>
                   <span className={`px-2 py-1 text-xs rounded-full ${profile.showDeadCharacters ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]' : 'bg-[var(--color-error)]/20 text-[var(--color-error)]'}`}>
                     {profile.showDeadCharacters ? '👀 Showing dead' : '🙈 Hiding dead'}
