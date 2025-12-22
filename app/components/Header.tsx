@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router";
+import { useApp } from "../context/AppContext";
 
 /**
  * Application header component with navigation
  */
 export function Header() {
   const location = useLocation();
+  const { profile } = useApp();
   const isHome = location.pathname === "/";
   const isSettings = location.pathname === "/settings";
 
@@ -37,7 +39,7 @@ export function Header() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              <span className="hidden sm:inline">Home</span>
+              <span className="hidden sm:inline">Explore</span>
             </Link>
             <Link
               to="/settings"
@@ -53,6 +55,14 @@ export function Header() {
               </svg>
               <span className="hidden sm:inline">Settings</span>
             </Link>
+            <div className="hidden md:flex items-center gap-2 ml-2 pl-4 border-l border-[var(--color-surface-light)]">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-portal)] flex items-center justify-center text-sm font-bold text-white">
+                {profile.username.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm text-[var(--color-text-secondary)]">
+                {profile.username}
+              </span>
+            </div>
           </nav>
         </div>
       </div>

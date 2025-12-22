@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import type { Route } from "./+types/home";
 import type { Character } from "../types/api";
 import { fetchCharacters } from "../utils/api";
+import { useApp } from "../context/AppContext";
 import { Header } from "../components/Header";
 import { CharacterCard } from "../components/CharacterCard";
 import { FilterBar } from "../components/FilterBar";
@@ -18,6 +19,8 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
+  const { profile } = useApp();
+  
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,10 +67,15 @@ export default function Home() {
   }, []);
 
   /**
-   * Filters characters based on search query, status, and species
+   * Filters characters based on search query, status, species, and user preferences
    */
   const filteredCharacters = useMemo(() => {
     return characters.filter((character) => {
+      // Apply showDeadCharacters setting from user profile
+      if (!profile.showDeadCharacters && character.status === "Dead") {
+        return false;
+      }
+      
       const matchesStatus = selectedStatus === "All" || character.status === selectedStatus;
       const matchesSpecies = selectedSpecies === "All" || character.species === selectedSpecies;
       const matchesSearch =
@@ -78,7 +86,14 @@ export default function Home() {
       
       return matchesStatus && matchesSpecies && matchesSearch;
     });
-  }, [characters, selectedStatus, selectedSpecies, searchQuery]);
+  }, [characters, selectedStatus, selectedSpecies, searchQuery, profile.showDeadCharacters]);
+
+  /**
+   * Limits displayed characters based on itemsPerPage setting
+   */
+  const displayedCharacters = useMemo(() => {
+    return filteredCharacters.slice(0, profile.itemsPerPage);
+  }, [filteredCharacters, profile.itemsPerPage]);
 
   /**
    * Handles viewing episodes for a character
@@ -99,6 +114,24 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 container mx-auto px-6 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+            Welcome back, {profile.username}! 👋
+          </h2>
+          <p className="text-[var(--color-text-secondary)] mt-1">
+            Explore characters from across the multiverse
+          </p>
+        </div>
+
+        {!profile.showDeadCharacters && (
+          <div className="mb-4 px-4 py-3 bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 rounded-lg flex items-center gap-2 text-sm text-[var(--color-warning)]">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Dead characters are hidden. Change this in Settings.
+          </div>
+        )}
+
         {isLoading ? (
           <LoadingState />
         ) : error ? (
@@ -113,10 +146,11 @@ export default function Home() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               totalCharacters={totalCharacters}
-              filteredCount={filteredCharacters.length}
+              filteredCount={displayedCharacters.length}
+              showDeadCharacters={profile.showDeadCharacters}
             />
 
-            {filteredCharacters.length === 0 ? (
+            {displayedCharacters.length === 0 ? (
               <div className="text-center py-16">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-surface)] mb-4 text-4xl">
                   🔍
@@ -131,7 +165,7 @@ export default function Home() {
             ) : (
               <>
                 <div className="grid gap-4 md:grid-cols-2">
-                  {filteredCharacters.map((character, index) => (
+                  {displayedCharacters.map((character, index) => (
                     <CharacterCard
                       key={character.id}
                       character={character}
@@ -140,6 +174,12 @@ export default function Home() {
                     />
                   ))}
                 </div>
+
+                {filteredCharacters.length > profile.itemsPerPage && (
+                  <p className="text-center text-sm text-[var(--color-text-secondary)] mt-4">
+                    Showing {displayedCharacters.length} of {filteredCharacters.length} filtered characters (limited by Items Per Page setting)
+                  </p>
+                )}
 
                 <Pagination
                   currentPage={currentPage}

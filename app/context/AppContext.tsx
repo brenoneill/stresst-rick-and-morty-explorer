@@ -17,7 +17,7 @@ export interface UserProfile {
 /**
  * Context value interface including profile and update methods
  */
-interface UserContextValue {
+interface AppContextValue {
   profile: UserProfile;
   updateProfile: (updates: Partial<UserProfile>) => void;
   resetProfile: () => void;
@@ -33,17 +33,17 @@ const DEFAULT_PROFILE: UserProfile = {
   notifications: true,
 };
 
-const UserContext = createContext<UserContextValue | null>(null);
+const AppContext = createContext<AppContextValue | null>(null);
 
-interface UserProviderProps {
+interface AppProviderProps {
   children: ReactNode;
 }
 
 /**
- * Provider component for user profile context
+ * Provider component for app-wide context
  * @param children - Child components to wrap with context
  */
-export function UserProvider({ children }: UserProviderProps) {
+export function AppProvider({ children }: AppProviderProps) {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
 
   /**
@@ -65,21 +65,21 @@ export function UserProvider({ children }: UserProviderProps) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ profile, updateProfile, resetProfile }}>
+    <AppContext.Provider value={{ profile, updateProfile, resetProfile }}>
       {children}
-    </UserContext.Provider>
+    </AppContext.Provider>
   );
 }
 
 /**
- * Hook to access user profile context
- * @returns User context value with profile and update methods
- * @throws Error if used outside of UserProvider
+ * Hook to access app context
+ * @returns App context value with profile and update methods
+ * @throws Error if used outside of AppProvider
  */
-export function useUser(): UserContextValue {
-  const context = useContext(UserContext);
+export function useApp(): AppContextValue {
+  const context = useContext(AppContext);
   if (!context) {
-    throw new Error("useUser must be used within a UserProvider");
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 }

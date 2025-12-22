@@ -7,6 +7,7 @@ interface FilterBarProps {
   onSearchChange: (query: string) => void;
   totalCharacters: number;
   filteredCount: number;
+  showDeadCharacters: boolean;
 }
 
 const STATUS_OPTIONS = ["All", "Alive", "Dead", "unknown"];
@@ -22,6 +23,7 @@ const SPECIES_OPTIONS = ["All", "Human", "Alien", "Humanoid", "Robot", "Animal",
  * @param onSearchChange - Callback when search query changes
  * @param totalCharacters - Total number of characters
  * @param filteredCount - Number of characters after filtering
+ * @param showDeadCharacters - Whether dead characters are shown (from settings)
  */
 export function FilterBar({
   selectedStatus,
@@ -32,8 +34,14 @@ export function FilterBar({
   onSearchChange,
   totalCharacters,
   filteredCount,
+  showDeadCharacters,
 }: FilterBarProps) {
   const hasFilters = selectedStatus !== "All" || selectedSpecies !== "All" || searchQuery !== "";
+
+  // Filter out "Dead" option if showDeadCharacters is disabled
+  const availableStatusOptions = showDeadCharacters 
+    ? STATUS_OPTIONS 
+    : STATUS_OPTIONS.filter(status => status !== "Dead");
 
   return (
     <div className="bg-[var(--color-surface)] rounded-xl p-4 border border-[var(--color-surface-light)] mb-6">
@@ -75,7 +83,7 @@ export function FilterBar({
             onChange={(e) => onStatusChange(e.target.value)}
             className="w-full px-4 py-2.5 bg-[var(--color-surface-light)] border border-[var(--color-surface-light)] rounded-lg text-[var(--color-text-primary)] focus:border-[var(--color-accent)] cursor-pointer"
           >
-            {STATUS_OPTIONS.map((status) => (
+            {availableStatusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
