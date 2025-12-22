@@ -35,6 +35,8 @@ export default function Home() {
   
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
+  console.log(profile);
+
   /**
    * Fetches characters from the API for the current page
    */

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 
 /**
@@ -47,6 +47,19 @@ export function AppProvider({ children }: AppProviderProps) {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
 
   /**
+   * Apply theme to document when it changes
+   */
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    // Remove all theme classes
+    root.classList.remove("theme-dark", "theme-light", "theme-portal");
+    
+    // Add the current theme class
+    root.classList.add(`theme-${profile.theme}`);
+  }, [profile.theme]);
+
+  /**
    * Updates specific fields in the user profile
    * @param updates - Partial profile object with fields to update
    */
@@ -83,4 +96,3 @@ export function useApp(): AppContextValue {
   }
   return context;
 }
-
