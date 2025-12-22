@@ -1,32 +1,40 @@
-# Welcome to React Router!
+# Stresst Rick and Morty Explorer
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A React-based character explorer for the Rick and Morty universe. This project is designed as a technical assessment for evaluating frontend development skills.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 🎯 Difficulty Level
 
-## Features
+**Intermediate**
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+This project tests the following skills:
+- React fundamentals (components, hooks, state management)
+- Context API for global state
+- API integration and data fetching
+- TypeScript usage
+- CSS/Tailwind styling
+- Pagination and filtering logic
+- User preferences and settings persistence
 
-## Getting Started
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+
+## 🚀 Getting Started
 
 ### Installation
 
-Install the dependencies:
+Clone the repository and install dependencies:
 
 ```bash
+git clone https://github.com/your-org/stresst-rick-and-morty-explorer.git
+cd stresst-rick-and-morty-explorer
 npm install
 ```
 
 ### Development
 
-Start the development server with HMR:
+Start the development server:
 
 ```bash
 npm run dev
@@ -34,7 +42,15 @@ npm run dev
 
 Your application will be available at `http://localhost:5173`.
 
-## Building for Production
+### Type Checking
+
+Run TypeScript type checking:
+
+```bash
+npm run typecheck
+```
+
+## 🏗️ Building for Production
 
 Create a production build:
 
@@ -42,46 +58,73 @@ Create a production build:
 npm run build
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+Start the production server:
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+npm run start
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## 🐳 Docker Deployment
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+Build and run using Docker:
 
-### DIY Deployment
+```bash
+docker build -t stresst-rick-and-morty-explorer .
+docker run -p 3000:3000 stresst-rick-and-morty-explorer
+```
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+## 📁 Project Structure
 
 ```
+├── app/
+│   ├── components/       # Reusable UI components
+│   │   ├── CharacterCard.tsx
+│   │   ├── EpisodeModal.tsx
+│   │   ├── ErrorState.tsx
+│   │   ├── FilterBar.tsx
+│   │   ├── Header.tsx
+│   │   ├── LoadingState.tsx
+│   │   └── Pagination.tsx
+│   ├── context/          # React Context for global state
+│   │   └── AppContext.tsx
+│   ├── routes/           # Page components
+│   │   ├── home.tsx      # Main character explorer page
+│   │   └── settings.tsx  # User preferences page
+│   ├── types/            # TypeScript type definitions
+│   │   └── api.ts
+│   ├── utils/            # Utility functions
+│   │   └── api.ts        # API client functions
+│   ├── app.css           # Global styles
+│   ├── root.tsx          # Root layout component
+│   └── routes.ts         # Route configuration
+├── public/               # Static assets
+├── Dockerfile
 ├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+├── tsconfig.json
+└── vite.config.ts
 ```
 
-## Styling
+## ✨ Features
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+- **Character Browsing**: View all characters from the Rick and Morty universe
+- **Search & Filter**: Filter characters by name, status, and species
+- **Pagination**: Navigate through pages of characters with configurable items per page
+- **Episode Details**: View which episodes each character appears in
+- **User Settings**: Customize display preferences (theme, items per page, show/hide dead characters)
+- **Persistent Preferences**: Settings are stored in localStorage
+
+## 🔗 API
+
+This project uses the [Rick and Morty API](https://rickandmortyapi.com/) - a free, open-source API with all the Rick and Morty data.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [React Router v7](https://reactrouter.com/) (React 19)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Build Tool**: Vite
+- **Runtime**: Node.js
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ for Stresst technical assessments.
