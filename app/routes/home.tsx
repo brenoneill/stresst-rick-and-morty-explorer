@@ -35,26 +35,46 @@ export default function Home() {
   
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
-  console.log(profile);
-
   /**
    * Fetches characters from the API for the current page
+   * The API always returns 20 items per page, so we calculate which API page to fetch
+   * and slice the appropriate items based on itemsPerPage setting
    */
   const loadData = useCallback(async (page: number) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await fetchCharacters(page);
-      setCharacters(response.results);
-      setTotalPages(response.info.pages);
+      const itemsPerPage = profile.itemsPerPage;
+      // Calculate which items we need (0-indexed)
+      const startIndex = (page - 1) * itemsPerPage;
+      
+      // The API returns 20 items per page, calculate which API page(s) we need
+      const apiPageSize = 20;
+      const apiPage = Math.floor(startIndex / apiPageSize) + 1;
+      
+      const response = await fetchCharacters(apiPage);
+      
+      // Calculate offset within the API page
+      const offsetInPage = startIndex % apiPageSize;
+      const slicedResults = response.results.slice(offsetInPage, offsetInPage + itemsPerPage);
+      
+      setCharacters(slicedResults);
       setTotalCharacters(response.info.count);
+      // Calculate effective total pages based on itemsPerPage setting
+      const effectivePages = Math.ceil(response.info.count / itemsPerPage);
+      setTotalPages(effectivePages);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load characters");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [profile.itemsPerPage]);
+
+  // Reset to page 1 when itemsPerPage changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [profile.itemsPerPage]);
 
   useEffect(() => {
     loadData(currentPage);
@@ -89,13 +109,6 @@ export default function Home() {
       return matchesStatus && matchesSpecies && matchesSearch;
     });
   }, [characters, selectedStatus, selectedSpecies, searchQuery, profile.showDeadCharacters]);
-
-  /**
-   * Limits displayed characters based on itemsPerPage setting
-   */
-  const displayedCharacters = useMemo(() => {
-    return filteredCharacters.slice(0, profile.itemsPerPage);
-  }, [filteredCharacters, profile.itemsPerPage]);
 
   /**
    * Handles viewing episodes for a character
@@ -148,11 +161,11 @@ export default function Home() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               totalCharacters={totalCharacters}
-              filteredCount={displayedCharacters.length}
+              filteredCount={filteredCharacters.length}
               showDeadCharacters={profile.showDeadCharacters}
             />
 
-            {displayedCharacters.length === 0 ? (
+            {filteredCharacters.length === 0 ? (
               <div className="text-center py-16">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-surface)] mb-4 text-4xl">
                   🔍
@@ -167,7 +180,7 @@ export default function Home() {
             ) : (
               <>
                 <div className="grid gap-4 md:grid-cols-2">
-                  {displayedCharacters.map((character, index) => (
+                  {filteredCharacters.map((character, index) => (
                     <CharacterCard
                       key={character.id}
                       character={character}
@@ -176,12 +189,6 @@ export default function Home() {
                     />
                   ))}
                 </div>
-
-                {filteredCharacters.length > profile.itemsPerPage && (
-                  <p className="text-center text-sm text-[var(--color-text-secondary)] mt-4">
-                    Showing {displayedCharacters.length} of {filteredCharacters.length} filtered characters (limited by Items Per Page setting)
-                  </p>
-                )}
 
                 <Pagination
                   currentPage={currentPage}
