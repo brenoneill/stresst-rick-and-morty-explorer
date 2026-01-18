@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import type { Character, Episode } from "../types/api";
 import { fetchEpisode } from "../utils/api";
 
@@ -8,10 +8,10 @@ interface EpisodeModalProps {
   character: Character | null;
 }
 
-const EPISODES_PER_BATCH = 10;
-
 /**
  * Extracts episode ID from episode URL
+ * @param url - The episode URL from the API
+ * @returns The episode ID as a number
  */
 function getEpisodeId(url: string): number {
   const parts = url.split("/");
@@ -19,7 +19,7 @@ function getEpisodeId(url: string): number {
 }
 
 /**
- * Modal component to display episodes for a character with infinite scroll
+ * Modal component to display all episodes for a character
  * @param isOpen - Whether the modal is visible
  * @param onClose - Callback to close the modal
  * @param character - The character whose episodes to display
@@ -31,9 +31,6 @@ export function EpisodeModal({
 }: EpisodeModalProps) {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [loadedCount, setLoadedCount] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -53,68 +50,26 @@ export function EpisodeModal({
     };
   }, [isOpen, onClose]);
 
-  /**
-   * Loads a batch of episodes starting from the given index
-   * @param startIndex - Index to start loading from
-   * @param episodeIds - Array of all episode IDs for the character
-   * @param isInitialLoad - Whether this is the first batch
-   */
-  const loadEpisodeBatch = useCallback(async (
-    startIndex: number,
-    episodeIds: number[],
-    isInitialLoad: boolean
-  ) => {
-    if (isInitialLoad) {
-      setIsLoading(true);
-    } else {
-      setIsLoadingMore(true);
-    }
-
-    const endIndex = Math.min(startIndex + EPISODES_PER_BATCH, episodeIds.length);
-    const idsToFetch = episodeIds.slice(startIndex, endIndex);
-
-    try {
-      const data = await Promise.all(idsToFetch.map(fetchEpisode));
-      if (isInitialLoad) {
-        setEpisodes(data);
-      } else {
-        setEpisodes((prev) => [...prev, ...data]);
-      }
-      setLoadedCount(endIndex);
-    } catch (err) {
-      console.error("Failed to fetch episodes:", err);
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    }
-  }, []);
-
-  // Initial load when modal opens
+  // Fetch all episodes when modal opens
   useEffect(() => {
     if (isOpen && character) {
+      setIsLoading(true);
       setEpisodes([]);
-      setLoadedCount(0);
+
       const episodeIds = character.episode.map(getEpisodeId);
-      loadEpisodeBatch(0, episodeIds, true);
+      
+      Promise.all(episodeIds.map(fetchEpisode))
+        .then((data) => {
+          setEpisodes(data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch episodes:", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
-  }, [isOpen, character, loadEpisodeBatch]);
-
-  /**
-   * Handles scroll event to trigger infinite scroll loading
-   */
-  const handleScroll = useCallback(() => {
-    if (!scrollContainerRef.current || !character || isLoadingMore) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-    const episodeIds = character.episode.map(getEpisodeId);
-    
-    // Load more when user is within 100px of the bottom
-    if (scrollTop + clientHeight >= scrollHeight - 100) {
-      if (loadedCount < episodeIds.length) {
-        loadEpisodeBatch(loadedCount, episodeIds, false);
-      }
-    }
-  }, [character, loadedCount, isLoadingMore, loadEpisodeBatch]);
+  }, [isOpen, character]);
 
   if (!isOpen) return null;
 
@@ -168,11 +123,7 @@ export function EpisodeModal({
           </div>
         </div>
 
-        <div 
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="p-6 overflow-y-auto max-h-[60vh]"
-        >
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -214,27 +165,6 @@ export function EpisodeModal({
                   </div>
                 </div>
               ))}
-              {isLoadingMore && (
-                <div className="flex items-center justify-center gap-2 pt-4">
-                  <div className="w-4 h-4 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-[var(--color-text-secondary)]">
-                    Loading more episodes...
-                  </span>
-                </div>
-              )}
-              {character && loadedCount < character.episode.length && !isLoadingMore && (
-                <p className="text-center text-sm text-[var(--color-text-secondary)] pt-4">
-                  Showing {loadedCount} of {character.episode.length} episodes
-                  <span className="block text-xs mt-1 text-[var(--color-accent-light)]">
-                    Scroll down to load more
-                  </span>
-                </p>
-              )}
-              {character && loadedCount >= character.episode.length && character.episode.length > EPISODES_PER_BATCH && (
-                <p className="text-center text-sm text-[var(--color-text-secondary)] pt-4">
-                  All {character.episode.length} episodes loaded
-                </p>
-              )}
             </div>
           )}
         </div>
