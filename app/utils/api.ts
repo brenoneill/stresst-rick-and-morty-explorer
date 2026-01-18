@@ -3,12 +3,47 @@ import type { Character, Episode, Location, ApiResponse } from "../types/api";
 const API_BASE_URL = "https://rickandmortyapi.com/api";
 
 /**
- * Fetches characters from the API with optional pagination
- * @param page - Page number to fetch (default: 1)
- * @returns Promise containing paginated character response
+ * Filter options for character search
  */
-export async function fetchCharacters(page: number = 1): Promise<ApiResponse<Character>> {
-  const response = await fetch(`${API_BASE_URL}/character?page=${page}`);
+export interface CharacterFilters {
+  name?: string;
+  status?: string;
+  species?: string;
+}
+
+/**
+ * Fetches characters from the API with optional pagination and filters
+ * @param page - Page number to fetch (default: 1)
+ * @param filters - Optional filters for name, status, and species
+ * @returns Promise containing paginated character response
+ * @throws Error if the request fails or no results found
+ */
+export async function fetchCharacters(
+  page: number = 1,
+  filters?: CharacterFilters
+): Promise<ApiResponse<Character>> {
+  const params = new URLSearchParams({ page: String(page) });
+  
+  if (filters?.name) {
+    params.append("name", filters.name);
+  }
+  if (filters?.status && filters.status !== "All") {
+    params.append("status", filters.status.toLowerCase());
+  }
+  if (filters?.species && filters.species !== "All") {
+    params.append("species", filters.species);
+  }
+  
+  const response = await fetch(`${API_BASE_URL}/character?${params.toString()}`);
+  
+  // API returns 404 when no results match the filter
+  if (response.status === 404) {
+    return {
+      info: { count: 0, pages: 0, next: null, prev: null },
+      results: [],
+    };
+  }
+  
   if (!response.ok) {
     throw new Error("Failed to fetch characters");
   }

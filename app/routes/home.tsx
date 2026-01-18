@@ -29,22 +29,29 @@ export default function Home() {
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCharacters, setTotalCharacters] = useState(0);
+  const [totalCharacters, setTotalCharacters] = useState(0); // Unfiltered total
+  const [filteredCount, setFilteredCount] = useState(0); // Count after filters
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedSpecies, setSelectedSpecies] = useState("All");
   
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
   /**
-   * Fetches characters from the API for the current page
+   * Fetches characters from the API for the current page with filters
    * The API always returns 20 items per page (https://rickandmortyapi.com/documentation/#api),
    * WE CANNOT CHANGE THIS
    * so we calculate which API page to fetch
    * and slice the appropriate items based on itemsPerPage setting
+   * 
+   * Filters (name, status, species) are applied server-side via API query params
    */
-  const loadData = useCallback(async (page: number) => {
+  const loadData = useCallback(async (
+    page: number,
+    filters: { name: string; status: string; species: string }
+  ) => {
     setIsLoading(true);
     setError(null);
     
@@ -57,14 +64,23 @@ export default function Home() {
       const apiPageSize = 20;
       const apiPage = Math.floor(startIndex / apiPageSize) + 1;
       
-      const response = await fetchCharacters(apiPage);
+      // Build API filters - status "Dead" is excluded if showDeadCharacters is false
+      const apiFilters = {
+        name: filters.name || undefined,
+        status: (!profile.showDeadCharacters && filters.status === "All") 
+          ? "Alive" // When dead characters hidden and no specific status, show only alive
+          : filters.status,
+        species: filters.species,
+      };
+      
+      const response = await fetchCharacters(apiPage, apiFilters);
       
       // Calculate offset within the API page
       const offsetInPage = startIndex % apiPageSize;
       const slicedResults = response.results.slice(offsetInPage, offsetInPage + itemsPerPage);
       
       setCharacters(slicedResults);
-      setTotalCharacters(response.info.count);
+      setFilteredCount(response.info.count);
       // Calculate effective total pages based on itemsPerPage setting
       const effectivePages = Math.ceil(response.info.count / itemsPerPage);
       setTotalPages(effectivePages);
@@ -73,16 +89,42 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [profile.itemsPerPage]);
+  }, [profile.itemsPerPage, profile.showDeadCharacters]);
 
-  // Reset to page 1 when itemsPerPage changes
+  // Fetch total character count once on mount
+  useEffect(() => {
+    const fetchTotalCount = async () => {
+      try {
+        const response = await fetchCharacters(1);
+        setTotalCharacters(response.info.count);
+      } catch {
+        // Silently fail - totalCharacters will show 0
+      }
+    };
+    fetchTotalCount();
+  }, []);
+
+  // Debounce search query to avoid API calls on every keystroke
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Reset to page 1 when itemsPerPage or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [profile.itemsPerPage]);
+  }, [profile.itemsPerPage, debouncedSearchQuery, selectedStatus, selectedSpecies, profile.showDeadCharacters]);
 
   useEffect(() => {
-    loadData(currentPage);
-  }, [currentPage, loadData]);
+    loadData(currentPage, {
+      name: debouncedSearchQuery,
+      status: selectedStatus,
+      species: selectedSpecies,
+    });
+  }, [currentPage, loadData, debouncedSearchQuery, selectedStatus, selectedSpecies]);
 
   /**
    * Handles page change
@@ -93,26 +135,17 @@ export default function Home() {
   }, []);
 
   /**
-   * Filters characters based on search query, status, species, and user preferences
+   * Characters to display - filtering is now done server-side via API
+   * Only client-side filtering needed is for showDeadCharacters edge cases
    */
-  const filteredCharacters = useMemo(() => {
-    return characters.filter((character) => {
-      // Apply showDeadCharacters setting from user profile
-      if (!profile.showDeadCharacters && character.status === "Dead") {
-        return false;
-      }
-      
-      const matchesStatus = selectedStatus === "All" || character.status === selectedStatus;
-      const matchesSpecies = selectedSpecies === "All" || character.species === selectedSpecies;
-      const matchesSearch =
-        searchQuery === "" ||
-        character.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        character.location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        character.origin.name.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      return matchesStatus && matchesSpecies && matchesSearch;
-    });
-  }, [characters, selectedStatus, selectedSpecies, searchQuery, profile.showDeadCharacters]);
+  const displayedCharacters = useMemo(() => {
+    // If showDeadCharacters is false, filter out any dead characters that slipped through
+    // (edge case: if user had "Dead" status selected before toggling the setting)
+    if (!profile.showDeadCharacters) {
+      return characters.filter((character) => character.status !== "Dead");
+    }
+    return characters;
+  }, [characters, profile.showDeadCharacters]);
 
   /**
    * Handles viewing episodes for a character
@@ -151,72 +184,72 @@ export default function Home() {
           </div>
         )}
 
+        <FilterBar
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          selectedSpecies={selectedSpecies}
+          onSpeciesChange={setSelectedSpecies}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          totalCharacters={totalCharacters}
+          filteredCount={filteredCount}
+          showDeadCharacters={profile.showDeadCharacters}
+          itemsPerPage={profile.itemsPerPage}
+          onItemsPerPageChange={(count) => {
+            updateProfile({ itemsPerPage: count });
+            showToast(`Showing ${count} items per page`, "info");
+          }}
+          itemsPerRow={profile.itemsPerRow}
+          onItemsPerRowChange={(count) => {
+            updateProfile({ itemsPerRow: count });
+            showToast(`Layout changed to ${count} column${count > 1 ? "s" : ""}`, "info");
+          }}
+        />
+
         {isLoading ? (
           <LoadingState />
         ) : error ? (
-          <ErrorState message={error} onRetry={() => loadData(currentPage)} />
+          <ErrorState message={error} onRetry={() => loadData(currentPage, {
+            name: debouncedSearchQuery,
+            status: selectedStatus,
+            species: selectedSpecies,
+          })} />
+        ) : displayedCharacters.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-surface)] mb-4 text-4xl">
+              🔍
+            </div>
+            <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+              No characters found
+            </h3>
+            <p className="text-[var(--color-text-secondary)]">
+              Try adjusting your search or filter criteria
+            </p>
+          </div>
         ) : (
           <>
-            <FilterBar
-              selectedStatus={selectedStatus}
-              onStatusChange={setSelectedStatus}
-              selectedSpecies={selectedSpecies}
-              onSpeciesChange={setSelectedSpecies}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              totalCharacters={totalCharacters}
-              filteredCount={filteredCharacters.length}
-              showDeadCharacters={profile.showDeadCharacters}
-              itemsPerPage={profile.itemsPerPage}
-              onItemsPerPageChange={(count) => {
-                updateProfile({ itemsPerPage: count });
-                showToast(`Showing ${count} items per page`, "info");
-              }}
-              itemsPerRow={profile.itemsPerRow}
-              onItemsPerRowChange={(count) => {
-                updateProfile({ itemsPerRow: count });
-                showToast(`Layout changed to ${count} column${count > 1 ? "s" : ""}`, "info");
-              }}
-            />
-
-            {filteredCharacters.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-surface)] mb-4 text-4xl">
-                  🔍
-                </div>
-                <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
-                  No characters found
-                </h3>
-                <p className="text-[var(--color-text-secondary)]">
-                  Try adjusting your search or filter criteria
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className={`grid gap-4 ${
-                  profile.itemsPerRow === 1 
-                    ? "grid-cols-1" 
-                    : profile.itemsPerRow === 2 
-                      ? "grid-cols-1 md:grid-cols-2" 
-                      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                }`}>
-                  {filteredCharacters.map((character, index) => (
-                    <CharacterCard
-                      key={character.id}
-                      character={character}
-                      onViewEpisodes={handleViewEpisodes}
-                      animationDelay={index * 50}
-                    />
-                  ))}
-                </div>
-
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
+            <div className={`grid gap-4 ${
+              profile.itemsPerRow === 1 
+                ? "grid-cols-1" 
+                : profile.itemsPerRow === 2 
+                  ? "grid-cols-1 md:grid-cols-2" 
+                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            }`}>
+              {displayedCharacters.map((character, index) => (
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  onViewEpisodes={handleViewEpisodes}
+                  animationDelay={index * 50}
                 />
-              </>
-            )}
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </>
         )}
       </main>
