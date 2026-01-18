@@ -7,6 +7,7 @@ interface FilterBarProps {
   onSearchChange: (query: string) => void;
   totalCharacters: number;
   filteredCount: number;
+  currentPage: number;
   showDeadCharacters: boolean;
   itemsPerPage: number;
   onItemsPerPageChange: (count: number) => void;
@@ -27,8 +28,9 @@ const ITEMS_PER_ROW_OPTIONS: (1 | 2 | 3)[] = [1, 2, 3];
  * @param onSpeciesChange - Callback when species filter changes
  * @param searchQuery - Current search query
  * @param onSearchChange - Callback when search query changes
- * @param totalCharacters - Total number of characters
+ * @param totalCharacters - Total number of characters (unfiltered)
  * @param filteredCount - Number of characters after filtering
+ * @param currentPage - Current page number (1-indexed)
  * @param showDeadCharacters - Whether dead characters are shown (from settings)
  * @param itemsPerPage - Number of items displayed per page
  * @param onItemsPerPageChange - Callback when items per page changes
@@ -44,6 +46,7 @@ export function FilterBar({
   onSearchChange,
   totalCharacters,
   filteredCount,
+  currentPage,
   showDeadCharacters,
   itemsPerPage,
   onItemsPerPageChange,
@@ -51,6 +54,10 @@ export function FilterBar({
   onItemsPerRowChange,
 }: FilterBarProps) {
   const hasFilters = selectedStatus !== "All" || selectedSpecies !== "All" || searchQuery !== "";
+  
+  // Calculate the range of results being shown
+  const rangeStart = filteredCount > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const rangeEnd = Math.min(currentPage * itemsPerPage, filteredCount);
 
   // Filter out "Dead" option if showDeadCharacters is disabled
   const availableStatusOptions = showDeadCharacters 
@@ -127,13 +134,18 @@ export function FilterBar({
         <span className="text-[var(--color-text-secondary)]">
           Showing{" "}
           <span className="font-semibold text-[var(--color-accent-light)]">
-            {filteredCount}
+            {rangeStart}-{rangeEnd}
           </span>{" "}
           of{" "}
           <span className="font-semibold text-[var(--color-text-primary)]">
-            {totalCharacters}
+            {filteredCount}
           </span>{" "}
-          characters
+          results
+          {hasFilters && (
+            <span className="text-[var(--color-text-secondary)]">
+              {" "}(filtered from {totalCharacters})
+            </span>
+          )}
         </span>
         {hasFilters && (
           <button

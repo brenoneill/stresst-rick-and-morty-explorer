@@ -193,6 +193,7 @@ export default function Home() {
           onSearchChange={setSearchQuery}
           totalCharacters={totalCharacters}
           filteredCount={filteredCount}
+          currentPage={currentPage}
           showDeadCharacters={profile.showDeadCharacters}
           itemsPerPage={profile.itemsPerPage}
           onItemsPerPageChange={(count) => {
