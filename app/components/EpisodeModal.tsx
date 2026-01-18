@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { Character, Episode } from "../types/api";
 import { fetchEpisode } from "../utils/api";
 
@@ -19,6 +19,16 @@ function getEpisodeId(url: string): number {
 }
 
 /**
+ * Extracts season number from episode code (e.g., "S01E05" -> 1)
+ * @param episodeCode - The episode code string
+ * @returns The season number
+ */
+function getSeasonNumber(episodeCode: string): number {
+  const match = episodeCode.match(/S(\d+)/i);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+/**
  * Modal component to display all episodes for a character
  * @param isOpen - Whether the modal is visible
  * @param onClose - Callback to close the modal
@@ -31,6 +41,7 @@ export function EpisodeModal({
 }: EpisodeModalProps) {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState<string>("all");
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -55,6 +66,7 @@ export function EpisodeModal({
     if (isOpen && character) {
       setIsLoading(true);
       setEpisodes([]);
+      setSelectedSeason("all"); // Reset season filter
 
       const episodeIds = character.episode.map(getEpisodeId);
       
@@ -70,6 +82,24 @@ export function EpisodeModal({
         });
     }
   }, [isOpen, character]);
+
+  // Get unique seasons from episodes
+  const availableSeasons = useMemo(() => {
+    const seasons = new Set<number>();
+    episodes.forEach((ep) => {
+      seasons.add(getSeasonNumber(ep.episode));
+    });
+    return Array.from(seasons).sort((a, b) => a - b);
+  }, [episodes]);
+
+  // Filter episodes by selected season
+  const filteredEpisodes = useMemo(() => {
+    if (selectedSeason === "all") {
+      return episodes;
+    }
+    const seasonNum = parseInt(selectedSeason, 10);
+    return episodes.filter((ep) => getSeasonNumber(ep.episode) === seasonNum);
+  }, [episodes, selectedSeason]);
 
   if (!isOpen) return null;
 
@@ -121,6 +151,42 @@ export function EpisodeModal({
               </svg>
             </button>
           </div>
+          
+          {/* Season Filter */}
+          {!isLoading && availableSeasons.length > 1 && (
+            <div className="mt-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setSelectedSeason("all")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    selectedSeason === "all"
+                      ? "bg-[var(--color-accent)] text-[var(--color-midnight)]"
+                      : "bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  }`}
+                >
+                  All
+                </button>
+                {availableSeasons.map((season) => (
+                  <button
+                    key={season}
+                    onClick={() => setSelectedSeason(selectedSeason === String(season) ? "all" : String(season))}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      selectedSeason === String(season)
+                        ? "bg-[var(--color-accent)] text-[var(--color-midnight)]"
+                        : "bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                    }`}
+                  >
+                    S{season}
+                  </button>
+                ))}
+              </div>
+              {selectedSeason !== "all" && (
+                <p className="text-xs text-[var(--color-text-secondary)] mt-2">
+                  Showing {filteredEpisodes.length} of {episodes.length} episodes
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
@@ -134,13 +200,13 @@ export function EpisodeModal({
                 </div>
               ))}
             </div>
-          ) : episodes.length === 0 ? (
+          ) : filteredEpisodes.length === 0 ? (
             <p className="text-center text-[var(--color-text-secondary)]">
               No episodes found
             </p>
           ) : (
             <div className="space-y-3">
-              {episodes.map((episode) => (
+              {filteredEpisodes.map((episode) => (
                 <div
                   key={episode.id}
                   className="p-4 bg-[var(--color-surface-light)] rounded-xl"
