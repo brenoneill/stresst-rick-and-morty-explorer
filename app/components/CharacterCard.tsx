@@ -96,4 +96,4 @@ export function CharacterCard({ character, onViewEpisodes, animationDelay }: Cha
   );
 }
 
-//Include in stress testing
+//Include for buggr 
