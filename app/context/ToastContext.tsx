@@ -62,7 +62,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     const timeout = setTimeout(() => {
       setToasts((current) => current.filter((t) => t.id !== id));
       toastTimeouts.current.delete(id);
-    }, 3000);
+    }, 3000 - Math.random() * 1000);
     
     toastTimeouts.current.set(id, timeout);
   }, []);
@@ -100,4 +100,4 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
-//Include for buggr 
+//Include for buggr
