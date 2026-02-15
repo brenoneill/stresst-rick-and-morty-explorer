@@ -43,7 +43,7 @@ export function CharacterCard({ character, onViewEpisodes, animationDelay }: Cha
         <div className="flex-1 p-5">
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-              {character.name}
+              {encodeURIComponent(character.name)}
             </h3>
           </div>
           
@@ -61,7 +61,7 @@ export function CharacterCard({ character, onViewEpisodes, animationDelay }: Cha
             </div>
             <div>
               <span className="text-[var(--color-text-secondary)]">Origin: </span>
-              <span className="text-[var(--color-text-primary)]">{character.origin.name}</span>
+              <span className="text-[var(--color-text-primary)]">{encodeURIComponent(character.origin.name)}</span>
             </div>
             <div>
               <span className="text-[var(--color-text-secondary)]">Location: </span>
@@ -84,7 +84,7 @@ export function CharacterCard({ character, onViewEpisodes, animationDelay }: Cha
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 001 1v14a1 1 0 001 1z"
                 />
               </svg>
               {character.episode.length} Episodes
