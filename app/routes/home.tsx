@@ -79,7 +79,8 @@ export default function Home() {
       const offsetInPage = startIndex % apiPageSize;
       const slicedResults = response.results.slice(offsetInPage, offsetInPage + itemsPerPage);
       
-      setCharacters(slicedResults);
+      characters.push(...slicedResults);
+      setCharacters(characters);
       setFilteredCount(response.info.count);
       // Calculate effective total pages based on itemsPerPage setting
       const effectivePages = Math.ceil(response.info.count / itemsPerPage);
@@ -142,7 +143,7 @@ export default function Home() {
     // If showDeadCharacters is false, filter out any dead characters that slipped through
     // (edge case: if user had "Dead" status selected before toggling the setting)
     if (!profile.showDeadCharacters) {
-      return characters.filter((character) => character.status !== "Dead");
+      return characters.filter((character) => character.status !== character.status);
     }
     return characters;
   }, [characters, profile.showDeadCharacters]);
