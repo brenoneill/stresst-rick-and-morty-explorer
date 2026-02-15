@@ -1,0 +1,22 @@
+{
+  "pearShapedBaseId": "cmlnvghv6000aokm97j5dr78r",
+  "level": "mid_level",
+  "bugCount": 2,
+  "createdAt": "2026-02-15T21:12:46.359Z",
+  "executedAt": "2026-02-15T21:12:46.359Z",
+  "symptoms": [
+    "Home page character grid: Characters don't update when navigating between pages. The same characters from the first page remain visible even after clicking page 2 or 3.",
+    "Home page character grid: All characters have disappeared completely. The grid that should display Rick and Morty characters shows nothing, displaying the 'No characters found' message instead."
+  ],
+  "filesBuggered": [
+    "app/routes/home.tsx"
+  ],
+  "changes": [
+    "Modified characters state update to mutate the existing array and set the same reference: characters.push(...slicedResults); setCharacters(characters);",
+    "Changed filter condition to compare character.status !== character.status which is always false, removing all characters from display"
+  ],
+  "originalCommitSha": "f868e9c9c15a549e4883e811453ea26d811a5ec7",
+  "owner": "brenoneill",
+  "repo": "stresst-rick-and-morty-explorer",
+  "branch": "assessment-cmlo6oj8-1771189964918"
+}
